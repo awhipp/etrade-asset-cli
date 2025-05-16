@@ -33,7 +33,8 @@ An ETrade CLI tool which is used to help calculate various investment metrics ba
 1. Run the script:
 
     ```sh
-    poetry run python app.py <flags>
+    poetry run python app.py --spy-strat
+    poetry run python app.py --strategy-ui
     ```
 
 2. Follow the prompts to generate OAuth tokens if they are not already available.
@@ -117,6 +118,38 @@ Break Even Distance: $4.26
 ```
 
 This feature is particularly useful for traders analyzing straddle opportunities and assessing break-even points for SPY options.
+
+### SPY Strategy Dashboard UI (`--strategy-ui`)
+
+For a more interactive experience, you can use the SPY Strategy Dashboard UI which provides real-time updates on SPY option data:
+
+```sh
+poetry run python app.py --strategy-ui
+```
+
+This launches a web interface with the following features:
+
+- **Real-time Updates**: Automatically refreshes data every 10 seconds
+- **Side-by-side Comparison**: Call options displayed on the left, put options on the right
+- **Straddle Analysis**: Complete straddle details with visual break-even points
+- **Responsive Design**: Works well on desktop and mobile devices
+
+The web interface provides a more convenient way to monitor option prices and straddle opportunities in real time. When you run the command, a browser window will automatically open to display the dashboard.
+
+#### Screenshot
+
+![SPY Strategy Dashboard](https://example.com/spy-dashboard-screenshot.png)
+
+#### Technical Details
+
+The dashboard is powered by:
+
+- Flask web server running locally
+- Automatic data polling via JavaScript
+- Clean, modern UI with responsive design
+- Visual indicators for break-even points
+
+This feature is especially useful for traders who want to monitor SPY options continuously throughout the trading day without repeatedly running commands in the terminal.
 
 ## Environment Variables
 

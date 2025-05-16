@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPY Strategy Dashboard</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .dashboard-header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .dashboard-header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .refresh-info {
+            font-size: 14px;
+        }
+        .dashboard-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .options-panel {
+            flex: 1;
+            min-width: 300px;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        .call-panel {
+            border-top: 4px solid #3498db;
+        }
+        .put-panel {
+            border-top: 4px solid #e74c3c;
+        }
+        .straddle-panel {
+            flex-basis: 100%;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 20px;
+            border-top: 4px solid #2ecc71;
+        }
+        .panel-header {
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .options-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .options-table td {
+            padding: 8px 4px;
+            border-bottom: 1px solid #eee;
+        }
+        .options-table tr:last-child td {
+            border-bottom: none;
+        }
+        .label {
+            font-weight: bold;
+            color: #7f8c8d;
+        }
+        .value {
+            text-align: right;
+            font-family: monospace;
+            font-size: 15px;
+        }
+        .price-value {
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .greeks-section {
+            margin-top: 15px;
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .greeks-header {
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 16px;
+            color: #7f8c8d;
+        }
+        .highlight {
+            background-color: #fffde7;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        .break-even-bounds {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f1f8e9;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+        .lower-bound, .upper-bound {
+            text-align: center;
+        }
+        .break-even-arrow {
+            height: 2px;
+            background-color: #2ecc71;
+            flex-grow: 1;
+            align-self: center;
+            margin: 0 15px;
+        }
+        .bound-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+        .bound-value {
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .price-change {
+            color: #27ae60;
+        }
+        .price-change.negative {
+            color: #c0392b;
+        }
+        .refresh-countdown {
+            background-color: #ecf0f1;
+            border-radius: 3px;
+            padding: 2px 6px;
+            margin-left: 10px;
+        }
+        .loading-message {
+            text-align: center;
+            padding: 50px;
+            font-size: 18px;
+            color: #7f8c8d;
+        }
+        .error-message {
+            background-color: #fdecea;
+            color: #c0392b;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-header">
+        <h1>SPY Strategy Dashboard</h1>
+        <div class="refresh-info">
+            Auto-refresh: <span id="countdown">10</span>s
+            <span id="last-updated"></span>
+        </div>
+    </div>
+
+    <div id="loading" class="loading-message">
+        Loading SPY strategy data...
+    </div>
+
+    <div id="error-container" style="display: none;"></div>
+
+    <div id="dashboard-container" style="display: none;">
+        <div class="dashboard-content">
+            <div class="options-panel call-panel">
+                <h2 class="panel-header">CALL Option</h2>
+                <table class="options-table">
+                    <tr>
+                        <td class="label">Symbol</td>
+                        <td id="call-symbol" class="value"></td>
+                    </tr>
+                    <tr>
+                        <td class="label">Strike Price</td>
+                        <td id="call-strike" class="value price-value"></td>
+                    </tr>
+                    <tr>
+                        <td class="label">Last Price</td>
+                        <td id="call-last-price" class="value price-value"></td>
+                    </tr>
+                    <tr>
+                        <td class="label">Bid</td>
+                        <td id="call-bid" class="value"></td>
+                    </tr>
+                    <tr>
+                        <td class="label">Ask</td>
+                        <td id="call-ask" class="value"></td>
+                    </tr>
+                    <tr>
+                        <td class="label">Volume</td>
+                        <td id="call-volume" class="value"></td>
+                    </tr>
+                    <tr>
+                        <td class="label">Open Interest</td>
+                        <td id="call-interest" class="value"></td>
+                    </tr>
+                </table>
+
+                <div id="call-greeks" class="greeks-section">
+                    <h3 class="greeks-header">Greeks</h3>
+                    <table class="options-table">
+                        <tr>
+                            <td class="label">Delta</td>
+                            <td id="call-delta" class="value"></td>
+                        </tr>
+                        <tr>
+                            <td class="label">Gamma</td>
+                            <td id="call-gamma" class="value"></td>
+                        </tr>
+                        <tr>
+                            <td class="label">Theta</td>
+                            <td id="call-theta" class="value"></td>
+                        </tr>
+                        <tr>
+                            <td class="label">Vega</td>
+                            <td id="call-vega" class="value"></td>
+                        </tr>
+                        <tr>
+                            <td class="label">IV</td>
+                            <td id="call-iv" class="value"></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="options-panel put-panel">
+                <h2 class="panel-header">PUT Option</h2>
+                <table class="options-table">
+                    <tr>
+                        <td class="label">Symbol</td>
+                        <td id="put-symbol" class="value"></td>
+                    </tr>
+                    <tr>
+                        <td class="label">Strike Price</td>
+                        <td id="put-strike" class="value price-value"></td>
+                    </tr>
+                    <tr>
+                        <td class="label">Last Price</td>
+                        <td id="put-last-price" class="value price-value"></td>
+                    </tr>
+                    <tr>
+                        <td class="label">Bid</td>
+                        <td id="put-bid" class="value"></td>
+                    </tr>
+                    <tr>
+                        <td class="label">Ask</td>
+                        <td id="put-ask" class="value"></td>
+                    </tr>
+                    <tr>
+                        <td class="label">Volume</td>
+                        <td id="put-volume" class="value"></td>
+                    </tr>
+                    <tr>
+                        <td class="label">Open Interest</td>
+                        <td id="put-interest" class="value"></td>
+                    </tr>
+                </table>
+
+                <div id="put-greeks" class="greeks-section">
+                    <h3 class="greeks-header">Greeks</h3>
+                    <table class="options-table">
+                        <tr>
+                            <td class="label">Delta</td>
+                            <td id="put-delta" class="value"></td>
+                        </tr>
+                        <tr>
+                            <td class="label">Gamma</td>
+                            <td id="put-gamma" class="value"></td>
+                        </tr>
+                        <tr>
+                            <td class="label">Theta</td>
+                            <td id="put-theta" class="value"></td>
+                        </tr>
+                        <tr>
+                            <td class="label">Vega</td>
+                            <td id="put-vega" class="value"></td>
+                        </tr>
+                        <tr>
+                            <td class="label">IV</td>
+                            <td id="put-iv" class="value"></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="straddle-panel">
+                <h2 class="panel-header">STRADDLE Strategy</h2>
+                <div class="dashboard-header" style="background-color: #f5f5f5; color: #333; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+                    <div>
+                        <span class="label">Current SPY:</span> 
+                        <span id="spy-price" class="highlight price-value"></span>
+                        <span id="spy-expiry" style="margin-left: 15px;"></span>
+                    </div>
+                    <div>
+                        <span class="label">Straddle Cost:</span> 
+                        <span id="straddle-price" class="highlight price-value"></span>
+                    </div>
+                </div>
+
+                <table class="options-table">
+                    <tr>
+                        <td class="label">Symbol</td>
+                        <td id="straddle-symbol" class="value"></td>
+                    </tr>
+                    <tr>
+                        <td class="label">Strike Price</td>
+                        <td id="straddle-strike" class="value price-value"></td>
+                    </tr>
+                    <tr>
+                        <td class="label">Bid</td>
+                        <td id="straddle-bid" class="value"></td>
+                    </tr>
+                    <tr>
+                        <td class="label">Ask</td>
+                        <td id="straddle-ask" class="value"></td>
+                    </tr>
+                </table>
+
+                <div class="break-even-bounds">
+                    <div class="lower-bound">
+                        <div class="bound-label">Lower Break-Even</div>
+                        <div id="break-even-lower" class="bound-value"></div>
+                    </div>
+                    <div class="break-even-arrow"></div>
+                    <div class="center-value">
+                        <div class="bound-label">Break-Even Distance</div>
+                        <div id="break-even-distance" class="bound-value"></div>
+                    </div>
+                    <div class="break-even-arrow"></div>
+                    <div class="upper-bound">
+                        <div class="bound-label">Upper Break-Even</div>
+                        <div id="break-even-upper" class="bound-value"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize variables
+        let lastData = null;
+        let countdownInterval;
+        
+        // Format currency values
+        function formatCurrency(value) {
+            if (value === null || value === undefined || value === 'N/A') {
+                return 'N/A';
+            }
+            return '$' + parseFloat(value).toFixed(2);
+        }
+        
+        // Format numeric values
+        function formatNumber(value, decimals = 2) {
+            if (value === null || value === undefined || value === 'N/A') {
+                return 'N/A';
+            }
+            return parseFloat(value).toFixed(decimals);
+        }
+        
+        // Update the countdown timer
+        function updateCountdown(seconds) {
+            document.getElementById('countdown').textContent = seconds;
+            
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+            
+            let count = seconds;
+            countdownInterval = setInterval(() => {
+                count--;
+                document.getElementById('countdown').textContent = count;
+                if (count <= 0) {
+                    clearInterval(countdownInterval);
+                }
+            }, 1000);
+        }
+        
+        // Format the last updated timestamp
+        function formatLastUpdated(timestamp) {
+            const date = new Date(timestamp * 1000);
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            const seconds = date.getSeconds().toString().padStart(2, '0');
+            return `(Last updated: ${hours}:${minutes}:${seconds})`;
+        }
+        
+        // Update the UI with new data
+        function updateUI(data) {
+            // Store the last data
+            lastData = data;
+            
+            // Show the dashboard and hide loading message
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('dashboard-container').style.display = 'block';
+            
+            // Update SPY price and expiry info
+            document.getElementById('spy-price').textContent = formatCurrency(data.spy_price);
+            document.getElementById('spy-expiry').textContent = `Expiry: ${data.expiry_date} (${data.days_to_expiry} days)`;
+            document.getElementById('last-updated').textContent = formatLastUpdated(data.timestamp);
+            
+            // Update call option data
+            document.getElementById('call-symbol').textContent = data.call.symbol || 'N/A';
+            document.getElementById('call-strike').textContent = formatCurrency(data.call.strike_price);
+            document.getElementById('call-last-price').textContent = formatCurrency(data.call.last_price);
+            document.getElementById('call-bid').textContent = formatCurrency(data.call.bid);
+            document.getElementById('call-ask').textContent = formatCurrency(data.call.ask);
+            document.getElementById('call-volume').textContent = formatNumber(data.call.volume, 0);
+            document.getElementById('call-interest').textContent = formatNumber(data.call.open_interest, 0);
+            
+            // Update call option Greeks if available
+            if (data.call.greeks) {
+                document.getElementById('call-delta').textContent = formatNumber(data.call.greeks.delta, 5);
+                document.getElementById('call-gamma').textContent = formatNumber(data.call.greeks.gamma, 5);
+                document.getElementById('call-theta').textContent = formatNumber(data.call.greeks.theta, 5);
+                document.getElementById('call-vega').textContent = formatNumber(data.call.greeks.vega, 5);
+                document.getElementById('call-iv').textContent = formatNumber(data.call.greeks.iv, 4);
+                document.getElementById('call-greeks').style.display = 'block';
+            } else {
+                document.getElementById('call-greeks').style.display = 'none';
+            }
+            
+            // Update put option data
+            document.getElementById('put-symbol').textContent = data.put.symbol || 'N/A';
+            document.getElementById('put-strike').textContent = formatCurrency(data.put.strike_price);
+            document.getElementById('put-last-price').textContent = formatCurrency(data.put.last_price);
+            document.getElementById('put-bid').textContent = formatCurrency(data.put.bid);
+            document.getElementById('put-ask').textContent = formatCurrency(data.put.ask);
+            document.getElementById('put-volume').textContent = formatNumber(data.put.volume, 0);
+            document.getElementById('put-interest').textContent = formatNumber(data.put.open_interest, 0);
+            
+            // Update put option Greeks if available
+            if (data.put.greeks) {
+                document.getElementById('put-delta').textContent = formatNumber(data.put.greeks.delta, 5);
+                document.getElementById('put-gamma').textContent = formatNumber(data.put.greeks.gamma, 5);
+                document.getElementById('put-theta').textContent = formatNumber(data.put.greeks.theta, 5);
+                document.getElementById('put-vega').textContent = formatNumber(data.put.greeks.vega, 5);
+                document.getElementById('put-iv').textContent = formatNumber(data.put.greeks.iv, 4);
+                document.getElementById('put-greeks').style.display = 'block';
+            } else {
+                document.getElementById('put-greeks').style.display = 'none';
+            }
+            
+            // Update straddle data
+            document.getElementById('straddle-symbol').textContent = data.straddle.symbol || 'N/A';
+            document.getElementById('straddle-strike').textContent = formatCurrency(data.straddle.strike_price);
+            document.getElementById('straddle-price').textContent = formatCurrency(data.straddle.last_price);
+            document.getElementById('straddle-bid').textContent = formatCurrency(data.straddle.bid);
+            document.getElementById('straddle-ask').textContent = formatCurrency(data.straddle.ask);
+            
+            // Update break-even information
+            document.getElementById('break-even-lower').textContent = formatCurrency(data.straddle.break_even_lower);
+            document.getElementById('break-even-upper').textContent = formatCurrency(data.straddle.break_even_upper);
+            document.getElementById('break-even-distance').textContent = formatCurrency(data.straddle.break_even_distance);
+        }
+        
+        // Handle errors
+        function showError(message) {
+            const errorContainer = document.getElementById('error-container');
+            errorContainer.innerHTML = `<div class="error-message">${message}</div>`;
+            errorContainer.style.display = 'block';
+            document.getElementById('loading').style.display = 'none';
+        }
+        
+        // Fetch data from the API
+        function fetchData() {
+            fetch('/api/strategy-data')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.status === 'initializing') {
+                        // Data is still initializing, try again in 2 seconds
+                        setTimeout(fetchData, 2000);
+                        return;
+                    } else if (data.status === 'error') {
+                        showError(data.message || 'Failed to load strategy data');
+                        return;
+                    }
+                    
+                    // Update the UI with the new data
+                    updateUI(data);
+                    
+                    // Reset the countdown
+                    updateCountdown(10);
+                    
+                    // Schedule the next update
+                    setTimeout(fetchData, 10000);
+                })
+                .catch(error => {
+                    console.error('Error fetching strategy data:', error);
+                    showError('Failed to connect to the server. Please check your connection.');
+                    
+                    // Try again in 15 seconds
+                    setTimeout(fetchData, 15000);
+                });
+        }
+        
+        // Start fetching data when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchData();
+        });
+    </script>
+</body>
+</html>
