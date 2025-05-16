@@ -2,9 +2,13 @@
 
 An ETrade CLI tool which is used to help calculate various investment metrics based on current account state. This is largely a personal project to get metrics of interest to me, but feel free to use it as you see fit.
 
+At this time the CLI primarily provides metrics on 0DTE SPY Straddles which helps me passively monitor metrics I am interested in.
+
+<img width="1424" alt="image" src="https://github.com/user-attachments/assets/f703bbec-92c0-4e64-b259-657cca32a213" />
+
 ## Requirements
 
-- Python 3.9 or higher
+- Python 3.13 or higher
 - [Poetry](https://python-poetry.org/) for dependency management
 
 ## Installation
@@ -135,10 +139,6 @@ This launches a web interface with the following features:
 - **Responsive Design**: Works well on desktop and mobile devices
 
 The web interface provides a more convenient way to monitor option prices and straddle opportunities in real time. When you run the command, a browser window will automatically open to display the dashboard.
-
-#### Screenshot
-
-![SPY Strategy Dashboard](https://example.com/spy-dashboard-screenshot.png)
 
 #### Technical Details
 
