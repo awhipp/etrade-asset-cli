@@ -137,3 +137,36 @@ class Client:
         '''
         order = pyetrade.ETradeOrder(**self.get_params(), dev = self.dev_type)
         return order.list_orders(account_id_key=account_id_key)
+
+    def get_option_chains(self, symbol, strike_price=None, expiry_date=None):
+        '''
+        This function gets the option chains for a symbol using the E*TRADE API
+        
+        Parameters:
+        - symbol: The ticker symbol (underlier)
+        - strike_price: Optional - The target strike price
+        - expiry_date: Optional - The expiration date as a datetime.date object
+        
+        Returns option chain data for the symbol
+        '''
+        market = pyetrade.ETradeMarket(**self.get_params(), dev=self.dev_type)
+        
+        # Set parameters according to API documentation
+        params = {
+            'underlier': symbol,
+            'chain_type': None,  # Get both calls and puts
+            'no_of_strikes': 1,
+            'resp_format': 'json',
+        }
+        
+        # Add optional parameters if provided
+        if strike_price:
+            params['strike_price_near'] = strike_price
+
+        # None is a valid value for expiry_date, so check if it's provided    
+        params['expiry_date'] = expiry_date
+
+        # Call the API to get option chains
+        print(f"Getting option chains for {symbol} with params: {params}")
+            
+        return market.get_option_chains(**params)

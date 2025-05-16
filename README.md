@@ -1,6 +1,6 @@
 # ETrade Asset CLI
 
-An ETrade CLI tool which is used to help calculate various investment metrics based on current account state.
+An ETrade CLI tool which is used to help calculate various investment metrics based on current account state. This is largely a personal project to get metrics of interest to me, but feel free to use it as you see fit.
 
 ## Requirements
 
@@ -33,10 +33,90 @@ An ETrade CLI tool which is used to help calculate various investment metrics ba
 1. Run the script:
 
     ```sh
-    poetry run python client.py
+    poetry run python app.py <flags>
     ```
 
 2. Follow the prompts to generate OAuth tokens if they are not already available.
+
+## Features
+
+### SPY Strategy (`--spy-strat`)
+
+The SPY strategy is a feature that analyzes SPY options to provide detailed information about:
+
+1. **Call Option**: Includes details such as symbol, strike price, last price, bid, ask, volume, open interest, and Greeks (delta, gamma, theta, vega, and implied volatility).
+2. **Put Option**: Includes the same details as the call option.
+3. **Straddle Option**: Combines the call and put options at the same strike price and provides:
+   - **Symbol**: The combined symbol for the straddle.
+   - **Strike Price**: The strike price of the options.
+   - **Last Price**: The combined last price of the call and put options.
+   - **Bid**: The combined bid price of the call and put options.
+   - **Ask**: The combined ask price of the call and put options.
+   - **Break Even Lower**: The lower price boundary at which the straddle becomes profitable.
+   - **Break Even Upper**: The upper price boundary at which the straddle becomes profitable.
+   - **Break Even Distance**: The total cost of the straddle, representing how far the price needs to move in either direction to break even.
+
+### Example Output
+
+When running the SPY strategy with the command:
+
+```sh
+poetry run python app.py --spy-strat
+```
+
+You will see output similar to the following:
+
+```plaintext
+===== SPY STRATEGY RESULTS =====
+Current SPY Price: $590.0
+Expiry Date: 2025-05-16
+Days to Expiry: 1
+
+CALL OPTION:
+Symbol: SPY May 16 '25 $590 Call
+Strike Price: $590.0
+Last Price: $2.37
+Bid: $2.35
+Ask: $2.37
+Volume: 167491
+Open Interest: 31700
+
+Greeks:
+  Delta: 0.52252
+  Gamma: 0.08018
+  Theta: -1.84601
+  Vega: 0.11266
+  IV: 0.17494
+
+PUT OPTION:
+Symbol: SPY May 16 '25 $590 Put
+Strike Price: $590.0
+Last Price: $1.89
+Bid: $1.89
+Ask: $1.91
+Volume: 107174
+Open Interest: 3971
+
+Greeks:
+  Delta: -0.47737
+  Gamma: 0.08372
+  Theta: -1.76913
+  Vega: 0.11263
+  IV: 0.16793
+
+STRADDLE OPTION:
+Symbol: SPY 590.0 Straddle
+Strike Price: $590.0
+Last Price: $4.26
+Bid: $4.24
+Ask: $4.28
+Break Even Lower: $585.74
+Break Even Upper: $594.26
+Break Even Distance: $4.26
+================================
+```
+
+This feature is particularly useful for traders analyzing straddle opportunities and assessing break-even points for SPY options.
 
 ## Environment Variables
 
